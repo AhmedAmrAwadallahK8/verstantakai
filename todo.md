@@ -1,0 +1,15 @@
+- ~~Come up with proj name~~
+    - ~~rename with the new name~~
+- Add project to github
+- Raise Custom Exceptions
+    - Learn about this more
+    - Create custome exceptions
+    - update project with custom exceptions
+- Check valid clf package
+    - check valid model
+    - check valid hyperparm
+    - check valid metrics
+- Add more models
+- Add associated hyperparams
+- Support lists of hyperparams
+- Handle Multiple Metrics

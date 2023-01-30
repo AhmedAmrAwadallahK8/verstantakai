@@ -1,6 +1,7 @@
 - ~~Come up with proj name~~
     - ~~rename with the new name~~
-- Add project to github
+- ~~Add project to github~~
+- Change test exceptions to assertions
 - Raise Custom Exceptions
     - Learn about this more
     - Create custome exceptions

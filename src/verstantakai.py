@@ -1,4 +1,6 @@
 from sklearn.model_selection import KFold
+# import custom_exceptions as ce
+import src.user_errors as ue
 
 
 class ModelSearch():
@@ -42,6 +44,17 @@ class ModelSearch():
         self.results = {}  # dict of list of dict results that look like
         self.data_state = {}
 
+    def reset_state(self):
+        self.x = None
+        self.y_true = None
+        self.clf_packages = None
+        self.n_folds = None
+        self.search_complete = None
+        self.model_num = None
+        self.optimal_results = None
+        self.results = None
+        self.data_state = None
+
     def check_valid_package(self):
         for clf_package in self.clf_packages:
             clf_object = clf_package[0]
@@ -56,8 +69,8 @@ class ModelSearch():
         if clf_name in self.supported_models:
             return
         else:
-            raise Exception(clf_name, ": is not a supported model")
-        return 0
+            ue.UnsupportedModelError(clf_name)
+            self.reset_state()
 
     def check_valid_params(self, clf_name: str, hyperparam):
         return 0

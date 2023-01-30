@@ -29,30 +29,22 @@ class TestModelSearch():
         srch.run()
         results = srch.get_raw_results()
 
-        if len(results) != 1:
-            raise Exception("Input one model but results returned multiple")
+        assert len(results) == 1
 
         first_model = list(results.keys())[0]
-        if first_model != "RandomForestClassifier#1":
-            raise Exception("Input model recieved unexpected name")
-        
-        results_first_model = results[first_model]
+        assert first_model == "RandomForestClassifier#1"
 
-        if len(results_first_model) != 5:
-            raise Exception("Input model did not compute exactly 5 different folds")
+        results_first_model = results[first_model]
+        assert len(results_first_model) == 5
 
         results_first_model_first_fold = results_first_model[0]
-
-        if len(results_first_model_first_fold) != 2:
-            raise Exception("Fold did not have exactly 2 key value pairs when 2 were expected")
+        assert len(results_first_model_first_fold) == 2
 
         metric_accuracy = list(results_first_model_first_fold.keys())[1]
-        if metric_accuracy != "accuracy_score":
-            raise Exception("Second key of dictionary returned an unexpected metric name when accuracy_score was expected")
-        
+        assert metric_accuracy == "accuracy_score"
+
         clf_obj = results_first_model_first_fold["clf"]
-        if type(clf_obj) is not RandomForestClassifier:
-            raise Exception("Returned model is not type RandomForestClassifier")
+        assert type(clf_obj) is RandomForestClassifier
 
     def repeated_model_test(self):
         x = np.array(
@@ -66,16 +58,13 @@ class TestModelSearch():
         srch.run()
         results = srch.get_raw_results()
 
-        if len(results) != 2:
-            raise Exception("Expected 2 models but got ", len(results))
+        assert len(results) == 2
 
         first_model = list(results.keys())[0]
-        if first_model != "RandomForestClassifier#1":
-            raise Exception("Input model recieved unexpected name")
+        assert first_model == "RandomForestClassifier#1"
 
-        first_model = list(results.keys())[1]
-        if first_model != "RandomForestClassifier#2":
-            raise Exception("Input model recieved unexpected name")
+        second_model = list(results.keys())[1]
+        assert second_model == "RandomForestClassifier#2"
 
     def multiple_model_test(self):
         x = np.array(
@@ -89,16 +78,13 @@ class TestModelSearch():
         srch.run()
         results = srch.get_raw_results()
 
-        if len(results) != 2:
-            raise Exception("Expected 2 models but got ", len(results))
+        assert len(results) == 2
 
         first_model = list(results.keys())[0]
-        if first_model != "RandomForestClassifier#1":
-            raise Exception("Input model recieved unexpected name")
+        assert first_model == "RandomForestClassifier#1"
 
-        first_model = list(results.keys())[1]
-        if first_model != "LinearRegression#1":
-            raise Exception("Input model recieved unexpected name")
+        second_model = list(results.keys())[1]
+        assert second_model == "LinearRegression#1"
 
     def invalid_model_test(self):
         x = np.array([[1, 2]])
@@ -107,10 +93,11 @@ class TestModelSearch():
         hyperparams = {}
         clf_pack = [(RandomForestClassifier, hyperparams, metrics)]
         srch = ModelSearch(x, y, clf_pack)
-        try:
-            srch.check_supported_model(None)
-        except Exception:
-            print("Unexpected error: {0}".format(sys.exc_info()[0]))
-            print("Found invalid model")
-            return
+        srch.check_supported_model("PumpkinRegression")
+        # try:
+        #     srch.check_supported_model(None)
+        # except Exception:
+        #     print("Unexpected error: {0}".format(sys.exc_info()[0]))
+        #     print("Found invalid model")
+        #     return
 

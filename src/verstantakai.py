@@ -12,7 +12,7 @@ class ModelSearch():
 
     supported_hyperparams = {
         "RandomForestClassifier": [
-            "n_estimators, criterion, max_depth"
+            "n_estimators", "criterion", "max_depth"
         ],
         "LinearRegression": [
             "n_jobs"
@@ -24,13 +24,13 @@ class ModelSearch():
 
     supported_metrics = {
         "RandomForestClassifier": [
-            "accuracy_score, f1, precision, recall, roc_auc"
+            "accuracy_score", "f1", "precision", "recall", "roc_auc"
         ],
         "LinearRegression": [
-            "neg_root_mean_squared_error"
+            "mean_squared_error", "r2_score"
         ],
         "LogisticRegression": [
-            "accuracy_score, f1, precision, recall, roc_auc"
+            "accuracy_score", "f1", "precision", "recall", "roc_auc"
         ]
     }
 
@@ -72,6 +72,12 @@ class ModelSearch():
         self.data_state = None
         print("Object state has been reset.")
 
+    def model_supported(self):
+        if self.invalid_input:
+            return False
+        else:
+            return True
+
     def check_valid_package(self):
         for clf_package in self.clf_packages:
             clf_object = clf_package[0]
@@ -79,8 +85,9 @@ class ModelSearch():
             hyperparams = clf_package[1]
             metrics = clf_package[2]
             self.check_supported_model(clf_name)
-            self.check_valid_params(clf_name, hyperparams)
-            self.check_valid_metrics(clf_name, metrics)
+            if self.model_supported():
+                self.check_valid_params(clf_name, hyperparams)
+                self.check_valid_metrics(clf_name, metrics)
 
     def check_supported_model(self, clf_name: str):
         if clf_name in self.supported_models:
@@ -95,16 +102,17 @@ class ModelSearch():
             if hyperparam in valid_hyperparams:
                 return
             else:
-                ue.UnsupportedHyperparamError(hyperparam)
+                ue.UnsupportedHyperparamError(hyperparam, clf_name)
                 self.invalid_input = True
 
     def check_valid_metrics(self, clf_name: str, metrics):
         valid_metrics = self.supported_metrics[clf_name]
         for metric in metrics:
-            if metric in valid_metrics:
+            metric_name = metric.__name__
+            if metric_name in valid_metrics:
                 return
             else:
-                ue.UnsupportedMetricError(metric)
+                ue.UnsupportedMetricError(metric_name, clf_name)
                 self.invalid_input = True
 
     def get_raw_results(self):
@@ -143,27 +151,30 @@ class ModelSearch():
         return 0
 
     def run(self):
-        kf = KFold(n_splits=self.n_folds)
-        for clf_package in self.clf_packages:
-            ret, ret_data = {}, {}
-            clf_object = clf_package[0]
-            clf_hyperparam = clf_package[1]
-            metrics = clf_package[2]
-            for id, (train_indices, test_indices) in enumerate(kf.split(self.x, self.y_true)):
+        if self.is_reset:
+            print("This object has not been setup properly. Aborting attempted run.")
+        else:
+            kf = KFold(n_splits=self.n_folds)
+            for clf_package in self.clf_packages:
+                ret, ret_data = {}, {}
+                clf_object = clf_package[0]
+                clf_hyperparam = clf_package[1]
+                metrics = clf_package[2]
+                for id, (train_indices, test_indices) in enumerate(kf.split(self.x, self.y_true)):
 
-                clf = clf_object(**clf_hyperparam)  # unpack parameters into clf if they exist
-                clf.fit(self.x[train_indices], self.y_true[train_indices])
-                y_pred = clf.predict(self.x[test_indices])
+                    clf = clf_object(**clf_hyperparam)  # unpack parameters into clf if they exist
+                    clf.fit(self.x[train_indices], self.y_true[train_indices])
+                    y_pred = clf.predict(self.x[test_indices])
 
-                ret_data[id] = {"train_indices": train_indices,
-                                "test_indices": test_indices}
-                ret[id] = {'clf': clf}
+                    ret_data[id] = {"train_indices": train_indices,
+                                    "test_indices": test_indices}
+                    ret[id] = {'clf': clf}
 
-                for metric in metrics:
-                    metric_name = metric.__name__
-                    ret[id][metric_name] = metric(self.y_true[test_indices], y_pred)
+                    for metric in metrics:
+                        metric_name = metric.__name__
+                        ret[id][metric_name] = metric(self.y_true[test_indices], y_pred)
 
-            clf_name = clf_object.__name__
-            self.record_results(clf_name, ret, ret_data)
+                clf_name = clf_object.__name__
+                self.record_results(clf_name, ret, ret_data)
 
-        self.search_complete = True
+            self.search_complete = True

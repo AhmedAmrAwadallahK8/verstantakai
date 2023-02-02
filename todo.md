@@ -14,7 +14,7 @@
     - ~~check valid model~~
     - check valid hyperparm
     - check valid metrics
-- Add more models
 - Add associated hyperparams
+- Handle Metrics
 - Support lists of hyperparams
-- Handle Multiple Metrics
+- Add more models

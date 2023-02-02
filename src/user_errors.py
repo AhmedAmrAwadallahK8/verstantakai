@@ -12,12 +12,12 @@ class UnsupportedModelError(UserError):
 
 
 class UnsupportedHyperparamError(UserError):
-    def __init__(self, hyperparam):
-        self.message = hyperparam + " is not a supported hyper-parameter."
+    def __init__(self, hyperparam, clf_name):
+        self.message = hyperparam + " is not a supported hyper-parameter for a model of type " + clf_name + "."
         super().__init__(self.message)
 
 
 class UnsupportedMetricError(UserError):
-    def __init__(self, metric):
-        self.message = metric + " is not a supported metric."
+    def __init__(self, metric, clf_name):
+        self.message = metric + " is not a supported metric for a model of type " + clf_name + "."
         super().__init__(self.message)

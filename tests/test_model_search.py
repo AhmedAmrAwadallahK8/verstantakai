@@ -1,8 +1,12 @@
 import numpy as np
 from sklearn.metrics import accuracy_score
+from sklearn.metrics import r2_score
+from sklearn.metrics import mean_squared_error
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LogisticRegression
 from src.verstantakai import ModelSearch
+from tests.bad_classifier import BadClassifier
 import sys
 
 
@@ -74,8 +78,10 @@ class TestModelSearch():
         )
         y = np.ones(x.shape[0])
         n_folds = 5
-        metrics = [accuracy_score]
-        clsf_param = [(RandomForestClassifier, {}, metrics), (LinearRegression, {}, metrics)]
+        metrics_forest = [accuracy_score]
+        metrics_linear = [mean_squared_error, r2_score]
+        clsf_param = [(RandomForestClassifier, {}, metrics_forest),
+                      (LinearRegression, {}, metrics_linear)]
         srch = ModelSearch(x, y, clsf_param, n_folds)
         srch.run()
         results = srch.get_raw_results()
@@ -93,9 +99,8 @@ class TestModelSearch():
         y = np.ones(x.shape[0])
         metrics = [accuracy_score]
         hyperparams = {}
-        clf_pack = [(RandomForestClassifier, hyperparams, metrics)]
+        clf_pack = [(BadClassifier, hyperparams, metrics)]
         srch = ModelSearch(x, y, clf_pack)
-        srch.check_supported_model("PumpkinRegression")
         assert srch.is_reset
 
         # try:
@@ -118,7 +123,10 @@ class TestModelSearch():
     def invalid_metrics_test(self):
         assert False
 
-    def hyperparam_search_test(self):
+    def single_hyperparam_test(self):
+        assert False
+
+    def list_hyperparam_test(self):
         assert False
 
     def plot_functionality_test(self):

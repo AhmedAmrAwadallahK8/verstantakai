@@ -106,7 +106,20 @@ class TestModelSearch():
         #     return
 
     def invalid_hyperparam_test(self):
+        x = np.array([[1, 2]])
+        y = np.ones(x.shape[0])
+        metrics = [accuracy_score]
+        hyperparams = {}
+        clf_pack = [(RandomForestClassifier, hyperparams, metrics)]
+        srch = ModelSearch(x, y, clf_pack)
+        srch.check_supported_model("PumpkinRegression")
         assert False
 
     def invalid_metrics_test(self):
+        assert False
+
+    def hyperparam_search_test(self):
+        assert False
+
+    def plot_functionality_test(self):
         assert False

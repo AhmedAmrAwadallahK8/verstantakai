@@ -6,24 +6,31 @@ import src.user_errors as ue
 class ModelSearch():
     supported_models = [
         "RandomForestClassifier",
-        "LinearRegression"
+        "LinearRegression",
+        "LogisticRegression"
     ]
 
     supported_hyperparams = {
         "RandomForestClassifier": [
-            ""
+            "n_estimators, criterion, max_depth"
         ],
         "LinearRegression": [
-            ""
+            "n_jobs"
+        ],
+        "LogisticRegression": [
+            "C"
         ]
     }
 
     supported_metrics = {
         "RandomForestClassifier": [
-            "accuracy_score"
+            "accuracy_score, f1, precision, recall, roc_auc"
         ],
         "LinearRegression": [
-            "accuracy_score"
+            "neg_root_mean_squared_error"
+        ],
+        "LogisticRegression": [
+            "accuracy_score, f1, precision, recall, roc_auc"
         ]
     }
 
@@ -34,6 +41,8 @@ class ModelSearch():
         clf_packages: list,
         n_folds=1
     ):
+        self.is_reset = False
+        self.invalid_input = False
         self.x = x
         self.y_true = y_true
         self.clf_packages = clf_packages
@@ -44,7 +53,14 @@ class ModelSearch():
         self.results = {}  # dict of list of dict results that look like
         self.data_state = {}
 
+        self.check_valid_package()
+
+        if self.invalid_input:
+            self.reset_state()
+
     def reset_state(self):
+        self.is_reset = True
+        self.invalid_input = None
         self.x = None
         self.y_true = None
         self.clf_packages = None
@@ -54,15 +70,16 @@ class ModelSearch():
         self.optimal_results = None
         self.results = None
         self.data_state = None
+        print("Object state has been reset.")
 
     def check_valid_package(self):
         for clf_package in self.clf_packages:
             clf_object = clf_package[0]
             clf_name = clf_object.__name__
-            hyperparam = clf_package[1]
+            hyperparams = clf_package[1]
             metrics = clf_package[2]
             self.check_supported_model(clf_name)
-            self.check_valid_params(clf_name, hyperparam)
+            self.check_valid_params(clf_name, hyperparams)
             self.check_valid_metrics(clf_name, metrics)
 
     def check_supported_model(self, clf_name: str):
@@ -70,13 +87,25 @@ class ModelSearch():
             return
         else:
             ue.UnsupportedModelError(clf_name)
-            self.reset_state()
+            self.invalid_input = True
 
-    def check_valid_params(self, clf_name: str, hyperparam):
-        return 0
+    def check_valid_params(self, clf_name: str, hyperparams):
+        valid_hyperparams = self.supported_hyperparams[clf_name]
+        for hyperparam in hyperparams:
+            if hyperparam in valid_hyperparams:
+                return
+            else:
+                ue.UnsupportedHyperparamError(hyperparam)
+                self.invalid_input = True
 
     def check_valid_metrics(self, clf_name: str, metrics):
-        return 0
+        valid_metrics = self.supported_metrics[clf_name]
+        for metric in metrics:
+            if metric in valid_metrics:
+                return
+            else:
+                ue.UnsupportedMetricError(metric)
+                self.invalid_input = True
 
     def get_raw_results(self):
         return self.results

@@ -1,13 +1,17 @@
 - ~~Come up with proj name~~
     - ~~rename with the new name~~
 - ~~Add project to github~~
-- Change test exceptions to assertions
-- Raise Custom Exceptions
-    - Learn about this more
-    - Create custome exceptions
+- ~~Change test exceptions to assertions~~
+- ~~Raise Custom Exceptions~~
+    - *Opted to not use exceptions*
+    - ~~Learn about this more~~
+    - Create custom exceptions
     - update project with custom exceptions
+- Raise Custom User Error Class
+    - ~~Setup custom user error super class~~
+    - This is to be done throughout the project
 - Check valid clf package
-    - check valid model
+    - ~~check valid model~~
     - check valid hyperparm
     - check valid metrics
 - Add more models

@@ -15,6 +15,8 @@ class TestModelSearch():
         self.repeated_model_test()
         self.multiple_model_test()
         self.invalid_model_test()
+        self.invalid_hyperparam_test()
+        self.invalid_metrics_test()
         print("All Tests Executed Successfully")
 
     def single_model_test(self):
@@ -94,6 +96,8 @@ class TestModelSearch():
         clf_pack = [(RandomForestClassifier, hyperparams, metrics)]
         srch = ModelSearch(x, y, clf_pack)
         srch.check_supported_model("PumpkinRegression")
+        assert srch.is_reset
+
         # try:
         #     srch.check_supported_model(None)
         # except Exception:
@@ -101,3 +105,8 @@ class TestModelSearch():
         #     print("Found invalid model")
         #     return
 
+    def invalid_hyperparam_test(self):
+        assert False
+
+    def invalid_metrics_test(self):
+        assert False

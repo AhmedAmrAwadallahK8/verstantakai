@@ -70,7 +70,7 @@ class ModelSearch():
         self.optimal_results = None
         self.results = None
         self.data_state = None
-        print("Object state has been reset.")
+        print("Object state has been reset.\n")
 
     def model_supported(self):
         if self.invalid_input:

@@ -2,6 +2,7 @@ import numpy as np
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import r2_score
 from sklearn.metrics import mean_squared_error
+from tests.metrics import bad_metric
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import LogisticRegression
@@ -114,13 +115,19 @@ class TestModelSearch():
         x = np.array([[1, 2]])
         y = np.ones(x.shape[0])
         metrics = [accuracy_score]
+        hyperparams = {"bad_param"}
+        clf_pack = [(RandomForestClassifier, hyperparams, metrics)]
+        srch = ModelSearch(x, y, clf_pack)
+        assert srch.is_reset
+
+    def invalid_metrics_test(self):
+        x = np.array([[1, 2]])
+        y = np.ones(x.shape[0])
+        metrics = [bad_metric]
         hyperparams = {}
         clf_pack = [(RandomForestClassifier, hyperparams, metrics)]
         srch = ModelSearch(x, y, clf_pack)
-        assert False
-
-    def invalid_metrics_test(self):
-        assert False
+        assert srch.is_reset
 
     def single_hyperparam_test(self):
         assert False

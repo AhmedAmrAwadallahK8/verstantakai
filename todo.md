@@ -12,7 +12,7 @@
     - This is to be done throughout the project
 - Check valid clf package
     - ~~check valid model~~
-    - check valid hyperparm
+    - ~~check valid hyperparm~~
     - check valid metrics
 - Add associated hyperparams
 - Handle Metrics

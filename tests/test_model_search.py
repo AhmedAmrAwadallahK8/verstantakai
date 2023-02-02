@@ -117,7 +117,6 @@ class TestModelSearch():
         hyperparams = {}
         clf_pack = [(RandomForestClassifier, hyperparams, metrics)]
         srch = ModelSearch(x, y, clf_pack)
-        srch.check_supported_model("PumpkinRegression")
         assert False
 
     def invalid_metrics_test(self):

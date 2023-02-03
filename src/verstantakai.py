@@ -53,6 +53,9 @@ class ModelSearch():
         self.results = {}  # dict of list of dict results that look like
         self.data_state = {}
 
+        self.ret = {}
+        self.ret_data = {}
+
         self.check_valid_package()
 
         if self.invalid_input:
@@ -150,31 +153,51 @@ class ModelSearch():
     def run_metrics(self):
         return 0
 
+    def has_hyperparam_permutations(self, clf_object, clf_hyperparam, optim_metric):
+        return False
+    
+    def optimal_search(self):
+        return 0
+
+    def fit_model(self):
+        return 0
+
+    def run_model(self, clf_package, kf):
+        self.ret, self.ret_data = {}, {}
+        clf_object = clf_package[0]
+        clf_hyperparams = clf_package[1]
+        metrics = clf_package[2]
+        optim_metric = metrics[0]
+        for id, (train_indices, test_indices) in enumerate(kf.split(self.x, self.y_true)):
+            if self.has_hyperparam_permutations(clf_hyperparams):
+                optimal_hyperparam = self.perform_optimal_search(clf_object, clf_hyperparams, optim_metric)
+            else:
+                optimal_hyperparam = clf_hyperparams
+
+            clf = clf_object(**optimal_hyperparam)  # unpack parameters into clf if they exist
+            clf.fit(self.x[train_indices], self.y_true[train_indices])
+            y_pred = clf.predict(self.x[test_indices])
+
+            self.ret_data[id] = {"train_indices": train_indices,
+                                 "test_indices": test_indices}
+            self.ret[id] = {'clf': clf}
+
+            for metric in metrics:
+                metric_name = metric.__name__
+                self.ret[id][metric_name] = metric(self.y_true[test_indices], y_pred)
+
+    def run_models(self):
+        kf = KFold(n_splits=self.n_folds)
+        for clf_package in self.clf_packages:
+            self.run_model(clf_package, kf)
+            clf_object = clf_package[0]
+            clf_name = clf_object.__name__
+            self.record_results(clf_name, self.ret, self.ret_data)
+        self.search_complete = True
+
     def run(self):
         if self.is_reset:
             print("This object has not been setup properly. Aborting attempted run.")
         else:
-            kf = KFold(n_splits=self.n_folds)
-            for clf_package in self.clf_packages:
-                ret, ret_data = {}, {}
-                clf_object = clf_package[0]
-                clf_hyperparam = clf_package[1]
-                metrics = clf_package[2]
-                for id, (train_indices, test_indices) in enumerate(kf.split(self.x, self.y_true)):
-
-                    clf = clf_object(**clf_hyperparam)  # unpack parameters into clf if they exist
-                    clf.fit(self.x[train_indices], self.y_true[train_indices])
-                    y_pred = clf.predict(self.x[test_indices])
-
-                    ret_data[id] = {"train_indices": train_indices,
-                                    "test_indices": test_indices}
-                    ret[id] = {'clf': clf}
-
-                    for metric in metrics:
-                        metric_name = metric.__name__
-                        ret[id][metric_name] = metric(self.y_true[test_indices], y_pred)
-
-                clf_name = clf_object.__name__
-                self.record_results(clf_name, ret, ret_data)
-
-            self.search_complete = True
+            self.run_models()
+    

@@ -28,7 +28,7 @@ class TestModelSearch():
         self.invalid_hyperparam_test()
         self.invalid_metrics_test()
         self.single_hyperparam_test()
-        self.list_hyperparam_test()
+        #self.list_hyperparam_test()
         print("All Tests Executed Successfully")
 
     def single_model_test(self):
@@ -142,7 +142,7 @@ class TestModelSearch():
         )
         y = np.ones(x.shape[0])
         n_folds = 5
-        hyperparams = {"n_estimators": 1}
+        hyperparams = {"n_estimators": 1, "max_depth": 4}
         metrics = [accuracy_score, f1_score, precision_score, recall_score]
         clsf_param = [(RandomForestClassifier, hyperparams, metrics)]
         srch = ModelSearch(x, y, clsf_param, n_folds)

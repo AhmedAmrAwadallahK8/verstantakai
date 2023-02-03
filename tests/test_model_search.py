@@ -13,6 +13,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import LogisticRegression
 from src.verstantakai import ModelSearch
 from tests.bad_classifier import BadClassifier
+from sklearn.datasets import load_breast_cancer
 import sys
 
 
@@ -28,7 +29,8 @@ class TestModelSearch():
         self.invalid_hyperparam_test()
         self.invalid_metrics_test()
         self.single_hyperparam_test()
-        #self.list_hyperparam_test()
+        self.list_hyperparam_test()
+        self.real_data_test()
         print("All Tests Executed Successfully")
 
     def single_model_test(self):
@@ -155,12 +157,28 @@ class TestModelSearch():
         )
         y = np.ones(x.shape[0])
         n_folds = 5
-        hyperparams = {"n_estimators": [1, 10, 100]}
+        hyperparams = {"n_estimators": [10, 1], "max_depth": [4, 3, 2, 1]}
         metrics = [accuracy_score, f1_score, precision_score, recall_score]
         clsf_param = [(RandomForestClassifier, hyperparams, metrics)]
         srch = ModelSearch(x, y, clsf_param, n_folds)
         srch.run()
         srch.print_results()
+
+    def real_data_test(self):
+        data = load_breast_cancer()
+        x = data.data
+        y = data.target
+        n_folds = 5
+        hyperparams_forest = {"n_estimators": [10, 100, 1], "max_depth": [4, 3, 2, 1]}
+        hyperparams_log = {"C": list(np.logspace(-3, 3, 5))}
+        
+        metrics = [accuracy_score, f1_score, precision_score, recall_score]
+        clsf_param = [(RandomForestClassifier, hyperparams_forest, metrics),
+                      (LogisticRegression, hyperparams_log, metrics)]
+        srch = ModelSearch(x, y, clsf_param, n_folds)
+        srch.run()
+        srch.print_results()
+
 
     def plot_functionality_test(self):
         assert False

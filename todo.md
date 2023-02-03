@@ -14,12 +14,16 @@
     - ~~check valid model~~
     - ~~check valid hyperparm~~
     - ~~check valid metrics~~
-- Select opitmizing metric
-    - Two choices
-        - First metric in list is the optimizing metric
-        - Make a new entry in package (tuple of 4 instead of 3)
+- ~~Select opitmizing metric~~
+    - ~~Two choices~~
+        - ~~First metric in list is the optimizing metric~~
+            - ~~Im choosing this one~~
+        - ~~Make a new entry in package (tuple of 4 instead of 3)~~
 - Add associated hyperparams
 - Handle Metrics
 - Support lists of hyperparams
 - Progress Bar
 - Add more models
+- Handle empty hyperparam values
+- Handle metrics that cant be used as optimizing metrics
+    - classification report is one of these

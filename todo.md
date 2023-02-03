@@ -10,11 +10,16 @@
 - Raise Custom User Error Class
     - ~~Setup custom user error super class~~
     - This is to be done throughout the project
-- Check valid clf package
+- ~~Check valid clf package~~
     - ~~check valid model~~
     - ~~check valid hyperparm~~
-    - check valid metrics
+    - ~~check valid metrics~~
+- Select opitmizing metric
+    - Two choices
+        - First metric in list is the optimizing metric
+        - Make a new entry in package (tuple of 4 instead of 3)
 - Add associated hyperparams
 - Handle Metrics
 - Support lists of hyperparams
+- Progress Bar
 - Add more models

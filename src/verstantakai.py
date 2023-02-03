@@ -24,13 +24,13 @@ class ModelSearch():
 
     supported_metrics = {
         "RandomForestClassifier": [
-            "accuracy_score", "f1", "precision", "recall", "roc_auc"
+            "accuracy_score", "f1_score", "precision_score", "recall_score", "roc_auc_score", "classification_report"
         ],
         "LinearRegression": [
             "mean_squared_error", "r2_score"
         ],
         "LogisticRegression": [
-            "accuracy_score", "f1", "precision", "recall", "roc_auc"
+            "accuracy_score", "f1_score", "precision_score", "recall_score", "roc_auc_score", "classification_report"
         ]
     }
 

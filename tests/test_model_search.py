@@ -1,5 +1,10 @@
 import numpy as np
 from sklearn.metrics import accuracy_score
+from sklearn.metrics import f1_score
+from sklearn.metrics import precision_score
+from sklearn.metrics import recall_score
+from sklearn.metrics import roc_auc_score
+from sklearn.metrics import classification_report
 from sklearn.metrics import r2_score
 from sklearn.metrics import mean_squared_error
 from tests.metrics import bad_metric
@@ -22,6 +27,8 @@ class TestModelSearch():
         self.invalid_model_test()
         self.invalid_hyperparam_test()
         self.invalid_metrics_test()
+        self.single_hyperparam_test()
+        self.list_hyperparam_test()
         print("All Tests Executed Successfully")
 
     def single_model_test(self):
@@ -115,7 +122,7 @@ class TestModelSearch():
         x = np.array([[1, 2]])
         y = np.ones(x.shape[0])
         metrics = [accuracy_score]
-        hyperparams = {"bad_param"}
+        hyperparams = {"bad_param": 0}
         clf_pack = [(RandomForestClassifier, hyperparams, metrics)]
         srch = ModelSearch(x, y, clf_pack)
         assert srch.is_reset
@@ -130,10 +137,30 @@ class TestModelSearch():
         assert srch.is_reset
 
     def single_hyperparam_test(self):
-        assert False
+        x = np.array(
+            [[1, 2], [3, 4], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5]]
+        )
+        y = np.ones(x.shape[0])
+        n_folds = 5
+        hyperparams = {"n_estimators": 1}
+        metrics = [accuracy_score, f1_score, precision_score, recall_score]
+        clsf_param = [(RandomForestClassifier, hyperparams, metrics)]
+        srch = ModelSearch(x, y, clsf_param, n_folds)
+        srch.run()
+        srch.print_results()
 
     def list_hyperparam_test(self):
-        assert False
+        x = np.array(
+            [[1, 2], [3, 4], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5]]
+        )
+        y = np.ones(x.shape[0])
+        n_folds = 5
+        hyperparams = {"n_estimators": [1, 10, 100]}
+        metrics = [accuracy_score, f1_score, precision_score, recall_score]
+        clsf_param = [(RandomForestClassifier, hyperparams, metrics)]
+        srch = ModelSearch(x, y, clsf_param, n_folds)
+        srch.run()
+        srch.print_results()
 
     def plot_functionality_test(self):
         assert False

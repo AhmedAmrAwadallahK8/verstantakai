@@ -19,7 +19,7 @@ class ModelSearch():
             "n_jobs"
         ],
         "LogisticRegression": [
-            "C"
+            "C", "max_iter"
         ]
     }
 
@@ -73,7 +73,7 @@ class ModelSearch():
         self.y_true = None
         self.clf_packages = None
         self.n_folds = None
-        self.search_complete = None
+        self.search_complete = False
         self.model_num = None
         self.optimal_results = None
         self.results = None
@@ -92,6 +92,9 @@ class ModelSearch():
             clf_name = clf_object.__name__
             hyperparams = clf_package[1]
             metrics = clf_package[2]
+
+            #Check Valid Types
+
             self.check_supported_model(clf_name)
             if self.model_supported():
                 self.check_valid_params(clf_name, hyperparams)
@@ -106,12 +109,27 @@ class ModelSearch():
 
     def check_valid_params(self, clf_name: str, hyperparams):
         valid_hyperparams = self.supported_hyperparams[clf_name]
-        for hyperparam in hyperparams:
-            if hyperparam in valid_hyperparams:
-                return
-            else:
-                ue.UnsupportedHyperparamError(hyperparam, clf_name)
+        single_model_structure = True
+        model_search_structure = True
+        for hyper_key in hyperparams:
+            # Check Keys
+            if hyper_key not in valid_hyperparams:
+                ue.UnsupportedHyperparamError(hyper_key, clf_name)
                 self.invalid_input = True
+
+            # Check Values
+            hyper_val = hyperparams[hyper_key]
+            if type(hyper_val) is list:
+                single_model_structure = False
+                if len(hyper_val) == 0:
+                    ue.EmptyHyperparamListError(hyper_key, clf_name)
+                    self.invalid_input = True
+            else:
+                model_search_structure = False
+
+        if (single_model_structure is False) and (model_search_structure is False):
+            ue.HyperparamListNonListMismatchError(clf_name)
+            self.invalid_input = True
 
     def check_valid_metrics(self, clf_name: str, metrics):
         valid_metrics = self.supported_metrics[clf_name]
@@ -137,9 +155,12 @@ class ModelSearch():
             print("\tFold", key, ": ", results[key])
 
     def print_results(self):
-        for model_id in self.results.keys():
-            print(model_id)
-            self.print_model_results(self.results[model_id])
+        if self.search_complete:
+            for model_id in self.results.keys():
+                print(model_id)
+                self.print_model_results(self.results[model_id])
+        else:
+            print("This object has not been run. Run the object and then try to print results")
 
     def record_results(
         self,
@@ -162,10 +183,7 @@ class ModelSearch():
         for k in clf_hyperparams.keys():
             hyperparam_values = clf_hyperparams[k]
             if type(hyperparam_values) is list:
-                if len(hyperparam_values) > 1:
-                    return True
-                else:
-                    return False
+                return True
             else:
                 return False
 

@@ -29,6 +29,8 @@ class TestModelSearch():
         self.invalid_hyperparam_test()
         self.invalid_metrics_test()
         self.single_hyperparam_test()
+        self.empty_value_hyperparam_test()
+        self.multi_value_hyperparam_test()
         self.list_hyperparam_test()
         self.real_data_test()
         print("All Tests Executed Successfully")
@@ -149,7 +151,31 @@ class TestModelSearch():
         clsf_param = [(RandomForestClassifier, hyperparams, metrics)]
         srch = ModelSearch(x, y, clsf_param, n_folds)
         srch.run()
-        srch.print_results()
+        assert srch.search_complete
+
+    def empty_value_hyperparam_test(self):
+        x = np.array(
+            [[1, 2], [3, 4], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5]]
+        )
+        y = np.ones(x.shape[0])
+        n_folds = 5
+        hyperparams = {"criterion": []}
+        metrics = [accuracy_score, f1_score, precision_score, recall_score]
+        clsf_param = [(RandomForestClassifier, hyperparams, metrics)]
+        srch = ModelSearch(x, y, clsf_param, n_folds)
+        assert srch.is_reset
+
+    def multi_value_hyperparam_test(self):
+        x = np.array(
+            [[1, 2], [3, 4], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5]]
+        )
+        y = np.ones(x.shape[0])
+        n_folds = 5
+        hyperparams = {"criterion": [1, 2], "n_estimators": 3}
+        metrics = [accuracy_score, f1_score, precision_score, recall_score]
+        clsf_param = [(RandomForestClassifier, hyperparams, metrics)]
+        srch = ModelSearch(x, y, clsf_param, n_folds)
+        assert srch.is_reset
 
     def list_hyperparam_test(self):
         x = np.array(
@@ -162,7 +188,7 @@ class TestModelSearch():
         clsf_param = [(RandomForestClassifier, hyperparams, metrics)]
         srch = ModelSearch(x, y, clsf_param, n_folds)
         srch.run()
-        srch.print_results()
+        assert srch.search_complete
 
     def real_data_test(self):
         data = load_breast_cancer()
@@ -177,7 +203,8 @@ class TestModelSearch():
                       (LogisticRegression, hyperparams_log, metrics)]
         srch = ModelSearch(x, y, clsf_param, n_folds)
         srch.run()
-        srch.print_results()
+        assert srch.search_complete
+
 
 
     def plot_functionality_test(self):

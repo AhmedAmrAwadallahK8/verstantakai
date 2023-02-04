@@ -17,7 +17,20 @@ class UnsupportedHyperparamError(UserError):
         super().__init__(self.message)
 
 
+class EmptyHyperparamListError(UserError):
+    def __init__(self, hyperparam, clf_name):
+        self.message = hyperparam + " has give an empty list of values for " + clf_name + ". Remove or add values."
+        super().__init__(self.message)
+
+
+class HyperparamListNonListMismatchError(UserError):
+    def __init__(self, clf_name):
+        self.message = clf_name + "contains a dictionary with a mixture of list and non list types. Convert all dictionary values to be of only list type or only numeric type"
+        super().__init__(self.message)
+
+
 class UnsupportedMetricError(UserError):
     def __init__(self, metric, clf_name):
         self.message = metric + " is not a supported metric for a model of type " + clf_name + "."
         super().__init__(self.message)
+

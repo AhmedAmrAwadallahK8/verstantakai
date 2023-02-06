@@ -39,6 +39,10 @@ class ModelSearch():
         "mean_squared_error"
     }
 
+    invalid_optimizing_metrics = {
+       "classification_report"
+    }
+
     def __init__(
         self,
         x,
@@ -133,11 +137,15 @@ class ModelSearch():
 
     def check_valid_metrics(self, clf_name: str, metrics):
         valid_metrics = self.supported_metrics[clf_name]
+        first_metric = True
         for metric in metrics:
             metric_name = metric.__name__
-            if metric_name in valid_metrics:
-                return
-            else:
+            if first_metric:
+                first_metric = False
+                if metric_name in self.invalid_optimizing_metrics:
+                    ue.InvalidOptimizingMetricError(metric_name, clf_name)
+                    self.invalid_input = True
+            if metric_name not in valid_metrics:
                 ue.UnsupportedMetricError(metric_name, clf_name)
                 self.invalid_input = True
 

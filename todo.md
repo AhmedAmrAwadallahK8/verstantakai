@@ -25,13 +25,14 @@
 - ~~Hyperpam permutation functions does not support mixes of lists and non lists~~
 - Progress Bar
 - ~~Handle empty hyperparam values~~
-- Handle metrics that cant be used as optimizing metrics
-    - classification report is one of these
+- ~~Handle metrics that cant be used as optimizing metrics~~
+    - ~~classification report is one of these~~
 - Plotting
     - Linear Regression
         Predicted versus True v True v True
     - Conf Matrix Heat Map?
 - Check Correct Types
+- print error only if user wants them, default setting is to print
 
 - Weird bug sometimes hyperparam are missing a parameter? Illegal value maybe?
 - Add more models

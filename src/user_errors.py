@@ -34,3 +34,9 @@ class UnsupportedMetricError(UserError):
         self.message = metric + " is not a supported metric for a model of type " + clf_name + "."
         super().__init__(self.message)
 
+
+class InvalidOptimizingMetricError(UserError):
+    def __init__(self, metric, clf_name):
+        self.message = "Reminder that the first metric listed within the metrics list is used as the optimizing metric.\n"
+        self.message += metric + " is not a valid optimizing metric. This invalid optimizing metric is present in a " + clf_name + " package."
+        super().__init__(self.message)

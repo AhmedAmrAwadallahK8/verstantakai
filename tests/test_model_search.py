@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import f1_score
 from sklearn.metrics import precision_score
@@ -33,6 +34,7 @@ class TestModelSearch():
         self.multi_value_hyperparam_test()
         self.list_hyperparam_test()
         self.invalid_optim_metric_test()
+        self.regression_plot_test()
         #self.real_data_test()
         print("All Tests Executed Successfully")
 
@@ -202,6 +204,18 @@ class TestModelSearch():
         clsf_param = [(RandomForestClassifier, hyperparams, metrics)]
         srch = ModelSearch(x, y, clsf_param, n_folds)
         assert srch.is_reset
+
+    def regression_plot_test(self):
+        x = np.random.rand(100, 2)
+        y = np.random.rand(100)*x[:, 0]
+        n_folds = 5
+        hyperparams = {}
+        metrics = [mean_squared_error]
+        clsf_param = [(LinearRegression, hyperparams, metrics)]
+        srch = ModelSearch(x, y, clsf_param, n_folds)
+        srch.run()
+        fig = srch.plots["LinearRegression#1"][0]["calibration_plot"]
+        assert fig is not None
 
     def real_data_test(self):
         data = load_breast_cancer()

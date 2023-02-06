@@ -28,9 +28,14 @@
 - ~~Handle metrics that cant be used as optimizing metrics~~
     - ~~classification report is one of these~~
 - Plotting
-    - Linear Regression
-        Predicted versus True v True v True
-    - Conf Matrix Heat Map?
+    - ~~Linear Regression~~
+        ~~Predicted versus True v True versus True~~
+    - Classification
+        - ROC Curve
+        - Confusion Matrix
+    - ~~Decide if plots should have their own data structure~~
+        - ~~Plots should have their own data structure~~
+
 - Check Correct Types
 - print error only if user wants them, default setting is to print
 

@@ -1,7 +1,10 @@
 from sklearn.model_selection import KFold
 # import custom_exceptions as ce
 import src.user_errors as ue
+import matplotlib.pyplot as plt
 from itertools import product
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 
 class ModelSearch():
@@ -43,6 +46,15 @@ class ModelSearch():
        "classification_report"
     }
 
+    regression_model = {
+        "LinearRegression"
+    }
+
+    classification_model = {
+        "LogisticRegression",
+        "RandomForestClassifier"
+    }
+
     def __init__(
         self,
         x,
@@ -61,9 +73,11 @@ class ModelSearch():
         self.optimal_results = {}  # dict
         self.results = {}  # dict of list of dict results that look like
         self.data_state = {}
+        self.plots = {}
 
         self.ret = {}
         self.ret_data = {}
+        self.ret_plots = {} #Make seperate?
 
         self.check_valid_package()
 
@@ -174,7 +188,8 @@ class ModelSearch():
         self,
         clf_name: str,
         ret: dict,
-        ret_data: dict
+        ret_data: dict,
+        ret_plots: dict
     ):
         if clf_name in self.model_num.keys():
             self.model_num[clf_name] += 1
@@ -183,6 +198,7 @@ class ModelSearch():
         clf_name = clf_name + "#" + str(self.model_num[clf_name])
         self.results[clf_name] = ret
         self.data_state[clf_name] = ret_data
+        self.plots[clf_name] = ret_plots
 
     def run_metrics(self):
         return 0
@@ -230,11 +246,12 @@ class ModelSearch():
         return 0
 
     def run_model(self, clf_package, kf):
-        self.ret, self.ret_data = {}, {}
+        self.ret, self.ret_data, self.ret_plots = {}, {}, {}
         clf_object = clf_package[0]
         clf_hyperparams = clf_package[1]
         metrics = clf_package[2]
         optim_metric = metrics[0]
+        clf_name = clf_object.__name__
         for id, (train_indices, test_indices) in enumerate(kf.split(self.x, self.y_true)):
             if self.has_hyperparam_permutations(clf_hyperparams):
                 optimal_hyperparam = self.perform_optimal_search(
@@ -248,6 +265,7 @@ class ModelSearch():
             else:
                 optimal_hyperparam = clf_hyperparams
 
+            # Run Final Model
             clf = clf_object(**optimal_hyperparam)  # unpack parameters into clf if they exist
             clf.fit(self.x[train_indices], self.y_true[train_indices])
             y_pred = clf.predict(self.x[test_indices])
@@ -255,10 +273,51 @@ class ModelSearch():
             self.ret_data[id] = {"train_indices": train_indices,
                                  "test_indices": test_indices}
             self.ret[id] = {'clf': clf}
+            self.ret_plots[id] = {}
 
+            # Add Metrics
             for metric in metrics:
                 metric_name = metric.__name__
                 self.ret[id][metric_name] = metric(self.y_true[test_indices], y_pred)
+
+            # Add Plots
+            if clf_name in self.regression_model:
+                trace1 = go.Scatter(
+                    x=self.y_true[test_indices],
+                    y=y_pred,
+                    name="Y Pred v Y Pred",
+                    marker=dict(
+                        color='rgb(34,163,192)'
+                            ),
+                    mode="markers"
+                )
+                trace2 = go.Scatter(
+                    x=self.y_true[test_indices],
+                    y=self.y_true[test_indices],
+                    name='Y True v Y True',
+                    mode="markers"
+                )
+
+                fig = make_subplots()
+                fig.add_trace(trace1)
+                fig.add_trace(trace2)
+                fig['layout'].update(
+                    height=600, width=800, title="Calibration Plot",
+                    xaxis=dict(
+                        tickangle=-90
+                    ))
+                self.ret_plots[id]["calibration_plot"] = fig
+                # fig = plt.figure()
+                # ax = fig.add_subplot(1, 1, 1)
+                # ax.scatter(y_pred, self.y_true[test_indices], label="Y Pred v Y True")
+                # ax.scatter(self.y_true[test_indices], self.y_true[test_indices], label="Example of desired result")
+                # ax.set_title("All Data Ypred to Ytrue comparison")
+                # ax.set_xlabel("Y Predicted")
+                # ax.set_ylabel("Y True")
+                # ax.legend(loc='upper center', shadow=True)
+                # self.ret[id]["calibration_plot"] = fig
+
+
 
     def run_models(self):
         kf = KFold(n_splits=self.n_folds)
@@ -266,7 +325,7 @@ class ModelSearch():
             self.run_model(clf_package, kf)
             clf_object = clf_package[0]
             clf_name = clf_object.__name__
-            self.record_results(clf_name, self.ret, self.ret_data)
+            self.record_results(clf_name, self.ret, self.ret_data, self.ret_plots)
         self.search_complete = True
 
     def run(self):

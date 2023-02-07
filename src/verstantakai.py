@@ -2,7 +2,6 @@ from sklearn.model_selection import KFold
 import numpy as np
 # import custom_exceptions as ce
 import src.user_errors as ue
-import matplotlib.pyplot as plt
 from itertools import product
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -31,13 +30,24 @@ class ModelSearch():
 
     supported_metrics = {
         "RandomForestClassifier": [
-            "accuracy_score", "f1_score", "precision_score", "recall_score", "roc_auc_score", "classification_report"
+            "accuracy_score",
+            "f1_score",
+            "precision_score",
+            "recall_score",
+            "roc_auc_score",
+            "classification_report"
         ],
         "LinearRegression": [
-            "mean_squared_error", "r2_score"
+            "mean_squared_error",
+            "r2_score"
         ],
         "LogisticRegression": [
-            "accuracy_score", "f1_score", "precision_score", "recall_score", "roc_auc_score", "classification_report"
+            "accuracy_score",
+            "f1_score",
+            "precision_score",
+            "recall_score",
+            "roc_auc_score",
+            "classification_report"
         ]
     }
 
@@ -75,14 +85,14 @@ class ModelSearch():
         self.n_folds = n_folds
         self.search_complete = False
         self.model_num = {}
-        self.optimal_results = {}  # dict
-        self.results = {}  # dict of list of dict results that look like
+        self.optimal_results = {}
+        self.results = {}
         self.data_state = {}
         self.plots = {}
 
         self.ret = {}
         self.ret_data = {}
-        self.ret_plots = {} #Make seperate?
+        self.ret_plots = {}
 
         self.check_valid_package()
 
@@ -116,7 +126,7 @@ class ModelSearch():
             hyperparams = clf_package[1]
             metrics = clf_package[2]
 
-            #Check Valid Types
+            # Add Check Valid Types Here
 
             self.check_supported_model(clf_name)
             if self.model_supported():
@@ -130,10 +140,16 @@ class ModelSearch():
             ue.UnsupportedModelError(clf_name)
             self.invalid_input = True
 
+    def mixed_hyperparam_structure(self, single_model, search_model):
+        if (single_model is False) and (search_model is False):
+            return True
+        else:
+            return False
+
     def check_valid_params(self, clf_name: str, hyperparams):
         valid_hyperparams = self.supported_hyperparams[clf_name]
         single_model_structure = True
-        model_search_structure = True
+        search_model_structure = True
         for hyper_key in hyperparams:
             # Check Keys
             if hyper_key not in valid_hyperparams:
@@ -148,9 +164,12 @@ class ModelSearch():
                     ue.EmptyHyperparamListError(hyper_key, clf_name)
                     self.invalid_input = True
             else:
-                model_search_structure = False
+                search_model_structure = False
 
-        if (single_model_structure is False) and (model_search_structure is False):
+        if self.mixed_hyperparam_structure(
+            single_model_structure,
+            search_model_structure
+        ):
             ue.HyperparamListNonListMismatchError(clf_name)
             self.invalid_input = True
 
@@ -216,7 +235,12 @@ class ModelSearch():
             else:
                 return False
 
-    def current_model_is_better(self, performance, optimal_performance, optim_metric):
+    def current_model_is_better(
+        self,
+        performance,
+        optimal_performance,
+        optim_metric
+    ):
         if optim_metric in self.optimal_at_0_metrics:
             performance *= -1
             optimal_performance *= -1
@@ -226,13 +250,26 @@ class ModelSearch():
         else:
             return False
 
-    def perform_optimal_search(self, clf_object, clf_hyperparams, optim_metric, x_train, y_train, x_test, y_test):
-        hyperparam_combinations = [dict(zip(clf_hyperparams, v)) for v in product(*clf_hyperparams.values())]
+    def perform_optimal_search(
+        self,
+        clf_object,
+        clf_hyperparams,
+        optim_metric,
+        x_train,
+        y_train,
+        x_test,
+        y_test
+    ):
+        hyperparam_combinations = [
+            dict(
+                zip(clf_hyperparams, v)
+            ) for v in product(*clf_hyperparams.values())
+        ]
         optimal_hyperparam = {}
         optimal_performance = {}
         first_iteration = True
         for hyperparam in hyperparam_combinations:
-            clf = clf_object(**hyperparam)  # unpack parameters into clf if they exist
+            clf = clf_object(**hyperparam)
             clf.fit(x_train, y_train)
             y_pred = clf.predict(x_test)
             performance = optim_metric(y_test, y_pred)
@@ -241,17 +278,19 @@ class ModelSearch():
                 optimal_hyperparam = hyperparam
                 optimal_performance = performance
             else:
-                if self.current_model_is_better(performance, optimal_performance, optim_metric.__name__):
+                if self.current_model_is_better(
+                    performance,
+                    optimal_performance,
+                    optim_metric.__name__
+                ):
                     optimal_performance = performance
                     optimal_hyperparam = hyperparam
 
         return optimal_hyperparam
 
-    def fit_model(self):
-        return 0
-
     def regression_plots(self, id, y_true, y_pred):
-        self.ret_plots[id]["calibration_plot"] = self.calibration_plot(y_true, y_pred)
+        fig = self.calibration_plot(y_true, y_pred)
+        self.ret_plots[id]["calibration_plot"] = fig
 
     def calibration_plot(self, y_true, y_pred):
         trace1 = go.Scatter(
@@ -285,7 +324,7 @@ class ModelSearch():
         self.ret_plots[id]["roc_curve"] = self.roc_curve(y_true, y_pred)
 
     def binary_roc_curve(self, y_true, y_pred_prob, pos_label):
-        fpr, tpr, thresholds = roc_curve(y_true, y_pred_prob, pos_label=pos_label)
+        fpr, tpr, tholds = roc_curve(y_true, y_pred_prob, pos_label=pos_label)
         trace1 = go.Scatter(
             x=fpr,
             y=tpr,
@@ -326,7 +365,7 @@ class ModelSearch():
     def multi_roc_curve(self, y_true, y_pred_prob, class_count):
         fig = make_subplots()
         for i in range(class_count):
-            preds = y_pred_prob[:,i]
+            preds = y_pred_prob[:, i]
             fpr, tpr, thresholds = roc_curve(y_true, preds, pos_label=i)
             r = random.randint(0, 255)
             g = random.randint(0, 255)
@@ -351,15 +390,13 @@ class ModelSearch():
                 name=label_name,
             )
             fig.add_trace(trace)
-        
+
         fig['layout'].update(
             height=600, width=800, title="ROC Curve",
             xaxis=dict(
                 tickangle=-90
             ))
-        
         return fig
-
 
     def binary_classification(self, class_count):
         if (class_count <= 2) and (class_count > 0):
@@ -380,44 +417,50 @@ class ModelSearch():
         metrics = clf_package[2]
         optim_metric = metrics[0]
         clf_name = clf_object.__name__
-        for id, (train_indices, test_indices) in enumerate(kf.split(self.x, self.y_true)):
+        for id, (train_i, test_i) in enumerate(kf.split(self.x, self.y_true)):
             if self.has_hyperparam_permutations(clf_hyperparams):
                 optimal_hyperparam = self.perform_optimal_search(
                     clf_object,
                     clf_hyperparams,
                     optim_metric,
-                    self.x[train_indices],
-                    self.y_true[train_indices],
-                    self.x[test_indices],
-                    self.y_true[test_indices])
+                    self.x[train_i],
+                    self.y_true[train_i],
+                    self.x[test_i],
+                    self.y_true[test_i]
+                )
             else:
                 optimal_hyperparam = clf_hyperparams
 
             # Run Final Model
-            clf = clf_object(**optimal_hyperparam)  # unpack parameters into clf if they exist
-            clf.fit(self.x[train_indices], self.y_true[train_indices])
+            clf = clf_object(**optimal_hyperparam)
+            clf.fit(self.x[train_i], self.y_true[train_i])
 
-            self.ret_data[id] = {"train_indices": train_indices,
-                                 "test_indices": test_indices}
+            self.ret_data[id] = {"train_indices": train_i,
+                                 "test_indices": test_i}
             self.ret[id] = {'clf': clf}
             self.ret_plots[id] = {}
 
-            y_pred = clf.predict(self.x[test_indices])
+            y_pred = clf.predict(self.x[test_i])
             # Add Metrics
             for metric in metrics:
                 metric_name = metric.__name__
-                self.ret[id][metric_name] = metric(self.y_true[test_indices], y_pred)
+                met_result = metric(self.y_true[test_i], y_pred)
+                self.ret[id][metric_name] = met_result
 
             # Add Plots
             if self.generate_plots:
                 if clf_name in self.regression_model:
-                    self.ret_plots[id]["calibration_plot"] = self.calibration_plot(self.y_true[test_indices], y_pred)
-                    # self.regression_plots(id, self.y_true[test_indices], y_pred)
-                if clf_name in self.classification_model:
-                    y_true_test = self.y_true[test_indices]
+                    calib_plot = self.calibration_plot(self.y_true[test_i],
+                                                       y_pred)
+                    self.ret_plots[id]["calibration_plot"] = calib_plot
+                elif clf_name in self.classification_model:
+                    y_true_test = self.y_true[test_i]
                     class_count = np.unique(y_true_test).shape[0]
-                    y_pred_prob = clf.predict_proba(self.x[test_indices])
-                    self.ret_plots[id]["roc_curve"] = self.multi_roc_curve(y_true_test, y_pred_prob, class_count)
+                    y_pred_prob = clf.predict_proba(self.x[test_i])
+                    roc_plot = self.multi_roc_curve(y_true_test,
+                                                    y_pred_prob,
+                                                    class_count)
+                    self.ret_plots[id]["roc_curve"] = roc_plot
                     # if self.binary_classification(class_count):
                     #     # Binary Classification
                     #     print("Binary")
@@ -434,7 +477,12 @@ class ModelSearch():
             self.run_model(clf_package, kf)
             clf_object = clf_package[0]
             clf_name = clf_object.__name__
-            self.record_results(clf_name, self.ret, self.ret_data, self.ret_plots)
+            self.record_results(
+                clf_name,
+                self.ret,
+                self.ret_data,
+                self.ret_plots
+            )
         self.search_complete = True
 
     def run(self):
@@ -442,4 +490,3 @@ class ModelSearch():
             print("This object has not been setup properly. Aborting attempted run.")
         else:
             self.run_models()
-    

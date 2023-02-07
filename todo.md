@@ -31,10 +31,16 @@
     - ~~Linear Regression~~
         ~~Predicted versus True v True versus True~~
     - Classification
-        - ROC Curve
+        - ~~ROC Curve~~
         - Confusion Matrix
+        - How to deal with binary v multinomial?
+            - Right now treating everything as multinomial but its possible to do this idk if i want to
+        - ~~Test cases now flooded with errors from sklearn but they are useful, adjust test case value so the errors dont appear anymore~~
+            - ~~Decided to make plotting opted into so old test cases stop yelling~~
     - ~~Decide if plots should have their own data structure~~
         - ~~Plots should have their own data structure~~
+
+- Error/Warning Handler
 
 - Check Correct Types
 - print error only if user wants them, default setting is to print

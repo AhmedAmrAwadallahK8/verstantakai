@@ -1,10 +1,13 @@
 from sklearn.model_selection import KFold
+import numpy as np
 # import custom_exceptions as ce
 import src.user_errors as ue
 import matplotlib.pyplot as plt
 from itertools import product
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from sklearn.metrics import roc_curve
+import random
 
 
 class ModelSearch():
@@ -60,8 +63,10 @@ class ModelSearch():
         x,
         y_true,
         clf_packages: list,
-        n_folds=1
+        n_folds=1,
+        generate_plots=False
     ):
+        self.generate_plots = generate_plots
         self.is_reset = False
         self.invalid_input = False
         self.x = x
@@ -245,6 +250,129 @@ class ModelSearch():
     def fit_model(self):
         return 0
 
+    def regression_plots(self, id, y_true, y_pred):
+        self.ret_plots[id]["calibration_plot"] = self.calibration_plot(y_true, y_pred)
+
+    def calibration_plot(self, y_true, y_pred):
+        trace1 = go.Scatter(
+            x=y_true,
+            y=y_pred,
+            name="Y Pred v Y Pred",
+            marker=dict(
+                color='rgb(34,163,192)'
+                    ),
+            mode="markers"
+        )
+        trace2 = go.Scatter(
+            x=y_true,
+            y=y_true,
+            name='Y True v Y True',
+            mode="markers"
+        )
+
+        fig = make_subplots()
+        fig.add_trace(trace1)
+        fig.add_trace(trace2)
+        fig['layout'].update(
+            height=600, width=800, title="Calibration Plot",
+            xaxis=dict(
+                tickangle=-90
+            ))
+
+        return fig
+
+    def classification_plots(self, id, y_true, y_pred):
+        self.ret_plots[id]["roc_curve"] = self.roc_curve(y_true, y_pred)
+
+    def binary_roc_curve(self, y_true, y_pred_prob, pos_label):
+        fpr, tpr, thresholds = roc_curve(y_true, y_pred_prob, pos_label=pos_label)
+        trace1 = go.Scatter(
+            x=fpr,
+            y=tpr,
+            marker=dict(
+                color='rgb(34,163,192)'
+                    ),
+        )
+
+        fig = make_subplots()
+        fig.add_trace(trace1)
+        fig['layout'].update(
+            height=600, width=800, title="ROC Curve",
+            xaxis=dict(
+                tickangle=-90
+            ))
+
+        return fig
+
+    def generate_roc_curve(self, fpr, tpr):
+        trace1 = go.Scatter(
+            x=fpr,
+            y=tpr,
+            marker=dict(
+                color='rgb(34,163,192)'
+                    ),
+        )
+
+        fig = make_subplots()
+        fig.add_trace(trace1)
+        fig['layout'].update(
+            height=600, width=800, title="ROC Curve",
+            xaxis=dict(
+                tickangle=-90
+            ))
+
+        return fig
+
+    def multi_roc_curve(self, y_true, y_pred_prob, class_count):
+        fig = make_subplots()
+        for i in range(class_count):
+            preds = y_pred_prob[:,i]
+            fpr, tpr, thresholds = roc_curve(y_true, preds, pos_label=i)
+            r = random.randint(0, 255)
+            g = random.randint(0, 255)
+            b = random.randint(0, 255)
+
+            colour = "rgb("
+            colour += str(r)
+            colour += ","
+            colour += str(g)
+            colour += ","
+            colour += str(b)
+            colour += ")"
+
+            label_name = "Label " + str(i) + " as Positive Curve"
+
+            trace = go.Scatter(
+                x=fpr,
+                y=tpr,
+                marker=dict(
+                    color=colour
+                        ),
+                name=label_name,
+            )
+            fig.add_trace(trace)
+        
+        fig['layout'].update(
+            height=600, width=800, title="ROC Curve",
+            xaxis=dict(
+                tickangle=-90
+            ))
+        
+        return fig
+
+
+    def binary_classification(self, class_count):
+        if (class_count <= 2) and (class_count > 0):
+            return True
+        else:
+            False
+
+    def multi_classification(self, class_count):
+        if class_count > 2:
+            return True
+        else:
+            False
+
     def run_model(self, clf_package, kf):
         self.ret, self.ret_data, self.ret_plots = {}, {}, {}
         clf_object = clf_package[0]
@@ -268,56 +396,37 @@ class ModelSearch():
             # Run Final Model
             clf = clf_object(**optimal_hyperparam)  # unpack parameters into clf if they exist
             clf.fit(self.x[train_indices], self.y_true[train_indices])
-            y_pred = clf.predict(self.x[test_indices])
 
             self.ret_data[id] = {"train_indices": train_indices,
                                  "test_indices": test_indices}
             self.ret[id] = {'clf': clf}
             self.ret_plots[id] = {}
 
+            y_pred = clf.predict(self.x[test_indices])
             # Add Metrics
             for metric in metrics:
                 metric_name = metric.__name__
                 self.ret[id][metric_name] = metric(self.y_true[test_indices], y_pred)
 
             # Add Plots
-            if clf_name in self.regression_model:
-                trace1 = go.Scatter(
-                    x=self.y_true[test_indices],
-                    y=y_pred,
-                    name="Y Pred v Y Pred",
-                    marker=dict(
-                        color='rgb(34,163,192)'
-                            ),
-                    mode="markers"
-                )
-                trace2 = go.Scatter(
-                    x=self.y_true[test_indices],
-                    y=self.y_true[test_indices],
-                    name='Y True v Y True',
-                    mode="markers"
-                )
-
-                fig = make_subplots()
-                fig.add_trace(trace1)
-                fig.add_trace(trace2)
-                fig['layout'].update(
-                    height=600, width=800, title="Calibration Plot",
-                    xaxis=dict(
-                        tickangle=-90
-                    ))
-                self.ret_plots[id]["calibration_plot"] = fig
-                # fig = plt.figure()
-                # ax = fig.add_subplot(1, 1, 1)
-                # ax.scatter(y_pred, self.y_true[test_indices], label="Y Pred v Y True")
-                # ax.scatter(self.y_true[test_indices], self.y_true[test_indices], label="Example of desired result")
-                # ax.set_title("All Data Ypred to Ytrue comparison")
-                # ax.set_xlabel("Y Predicted")
-                # ax.set_ylabel("Y True")
-                # ax.legend(loc='upper center', shadow=True)
-                # self.ret[id]["calibration_plot"] = fig
-
-
+            if self.generate_plots:
+                if clf_name in self.regression_model:
+                    self.ret_plots[id]["calibration_plot"] = self.calibration_plot(self.y_true[test_indices], y_pred)
+                    # self.regression_plots(id, self.y_true[test_indices], y_pred)
+                if clf_name in self.classification_model:
+                    y_true_test = self.y_true[test_indices]
+                    class_count = np.unique(y_true_test).shape[0]
+                    y_pred_prob = clf.predict_proba(self.x[test_indices])
+                    self.ret_plots[id]["roc_curve"] = self.multi_roc_curve(y_true_test, y_pred_prob, class_count)
+                    # if self.binary_classification(class_count):
+                    #     # Binary Classification
+                    #     print("Binary")
+                    # elif self.multi_classification(class_count):
+                    #     # Multiclass
+                    #     print("Multiclass plotting not supported atm")
+                    # else:
+                    #     # Unexpected
+                    #     print("Unexpected classification plot case")
 
     def run_models(self):
         kf = KFold(n_splits=self.n_folds)

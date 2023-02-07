@@ -35,14 +35,17 @@ class TestModelSearch():
         self.list_hyperparam_test()
         self.invalid_optim_metric_test()
         self.regression_plot_test()
-        #self.real_data_test()
+        self.classification_plot_test()
+        self.real_data_test()
         print("All Tests Executed Successfully")
 
     def single_model_test(self):
         x = np.array(
             [[1, 2], [3, 4], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5]]
         )
-        y = np.ones(x.shape[0])
+        y = np.array(
+            [1, 1, 1, 1, 1, 1, 1, 1]
+        )
         n_folds = 5
         metrics = [accuracy_score]
         clsf_param = [(RandomForestClassifier, {}, metrics)]
@@ -71,7 +74,9 @@ class TestModelSearch():
         x = np.array(
             [[1, 2], [3, 4], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5]]
         )
-        y = np.ones(x.shape[0])
+        y = np.array(
+            [1, 1, 1, 1, 1, 1, 1, 1]
+        )
         n_folds = 5
         metrics = [accuracy_score]
         clsf_param = [(RandomForestClassifier, {}, metrics), (RandomForestClassifier, {}, metrics)]
@@ -91,7 +96,9 @@ class TestModelSearch():
         x = np.array(
             [[1, 2], [3, 4], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5]]
         )
-        y = np.ones(x.shape[0])
+        y = np.array(
+            [1, 1, 1, 1, 1, 1, 1, 1]
+        )
         n_folds = 5
         metrics_forest = [accuracy_score]
         metrics_linear = [mean_squared_error, r2_score]
@@ -147,7 +154,9 @@ class TestModelSearch():
         x = np.array(
             [[1, 2], [3, 4], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5]]
         )
-        y = np.ones(x.shape[0])
+        y = np.array(
+            [1, 1, 1, 1, 1, 1, 1, 1]
+        )
         n_folds = 5
         hyperparams = {"n_estimators": 1, "max_depth": 4}
         metrics = [accuracy_score, f1_score, precision_score, recall_score]
@@ -160,7 +169,9 @@ class TestModelSearch():
         x = np.array(
             [[1, 2], [3, 4], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5]]
         )
-        y = np.ones(x.shape[0])
+        y = np.array(
+            [1, 1, 1, 1, 1, 1, 1, 1]
+        )
         n_folds = 5
         hyperparams = {"criterion": []}
         metrics = [accuracy_score, f1_score, precision_score, recall_score]
@@ -172,7 +183,9 @@ class TestModelSearch():
         x = np.array(
             [[1, 2], [3, 4], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5]]
         )
-        y = np.ones(x.shape[0])
+        y = np.array(
+            [1, 1, 1, 1, 1, 1, 1, 1]
+        )
         n_folds = 5
         hyperparams = {"criterion": [1, 2], "n_estimators": 3}
         metrics = [accuracy_score, f1_score, precision_score, recall_score]
@@ -184,7 +197,9 @@ class TestModelSearch():
         x = np.array(
             [[1, 2], [3, 4], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5]]
         )
-        y = np.ones(x.shape[0])
+        y = np.array(
+            [1, 1, 1, 1, 1, 1, 1, 1]
+        )
         n_folds = 5
         hyperparams = {"n_estimators": [10, 1], "max_depth": [4, 3, 2, 1]}
         metrics = [accuracy_score, f1_score, precision_score, recall_score]
@@ -197,7 +212,9 @@ class TestModelSearch():
         x = np.array(
             [[1, 2], [3, 4], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5]]
         )
-        y = np.ones(x.shape[0])
+        y = np.array(
+            [1, 1, 1, 1, 1, 1, 1, 1]
+        )
         n_folds = 5
         hyperparams = {"n_estimators": [10, 1], "max_depth": [4, 3, 2, 1]}
         metrics = [classification_report, f1_score, precision_score, recall_score]
@@ -212,10 +229,31 @@ class TestModelSearch():
         hyperparams = {}
         metrics = [mean_squared_error]
         clsf_param = [(LinearRegression, hyperparams, metrics)]
-        srch = ModelSearch(x, y, clsf_param, n_folds)
+        srch = ModelSearch(x, y, clsf_param, n_folds, generate_plots=True)
         srch.run()
-        fig = srch.plots["LinearRegression#1"][0]["calibration_plot"]
-        assert fig is not None
+
+        # Change this to catch the exception of the plot not existing in the dict
+        try:
+            fig = srch.plots["LinearRegression#1"][0]["calibration_plot"]
+            assert True
+        except KeyError:
+            assert False
+
+    def classification_plot_test(self):
+        data = load_breast_cancer()
+        x = data.data[0:1000]
+        y = data.target[0:1000]
+        n_folds = 5
+        hyperparams = {}
+        metrics = [f1_score]
+        clsf_param = [(LogisticRegression, hyperparams, metrics)]
+        srch = ModelSearch(x, y, clsf_param, n_folds, generate_plots=True)
+        srch.run()
+        try:
+            fig = srch.plots["LogisticRegression#1"][0]["roc_curve"]
+            assert True
+        except KeyError:
+            assert False
 
     def real_data_test(self):
         data = load_breast_cancer()
@@ -228,8 +266,10 @@ class TestModelSearch():
         metrics = [accuracy_score, f1_score, precision_score, recall_score]
         clsf_param = [(RandomForestClassifier, hyperparams_forest, metrics),
                       (LogisticRegression, hyperparams_log, metrics)]
-        srch = ModelSearch(x, y, clsf_param, n_folds)
+        srch = ModelSearch(x, y, clsf_param, n_folds, generate_plots=True)
         srch.run()
+        fig = srch.plots["LogisticRegression#1"][0]["roc_curve"]
+        fig.show()
         assert srch.search_complete
 
 

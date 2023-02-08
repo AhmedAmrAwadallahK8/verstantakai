@@ -40,11 +40,13 @@
     - ~~Decide if plots should have their own data structure~~
         - ~~Plots should have their own data structure~~
 
-- Error/Warning Handler
+- ~~Error/Warning Handler~~
 
-- Check Correct Types
-- print error only if user wants them, default setting is to print
+- ~~Check Correct Types~~
+- ~~print error only if user wants them, default setting is to print~~
+    - ~~not sure if want~~
+    - ~~easily implemented with a single if statement so i did it~~
 
 - Weird bug sometimes hyperparam are missing a parameter? Illegal value maybe?
 - Add more models
-- Convert built in warnings to warning handled by the warning class
+- ~~Convert built in warnings to warning handled by the warning class~~

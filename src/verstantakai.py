@@ -76,7 +76,8 @@ class ModelSearch():
         y_true,
         clf_packages: list,
         n_folds=1,
-        generate_plots=False
+        generate_plots=False,
+        print_errors=True
     ):
         self.error_queue = UserMessageQueue()
 
@@ -102,7 +103,10 @@ class ModelSearch():
 
         if self.invalid_input:
             self.reset_state()
-            self.error_queue.process_queue()
+            if print_errors:
+                self.error_queue.process_queue()
+            else:
+                self.error_queue.empty_queue()
 
     def reset_state(self):
         self.is_reset = True
@@ -125,14 +129,53 @@ class ModelSearch():
         else:
             return True
 
+    def check_valid_types(self, clf_package):
+        hyperparams = clf_package[1]
+        metrics = clf_package[2]
+
+        if type(clf_package) != tuple:
+
+            self.error_queue.add_message(
+                ue.InvalidClassifierPackageType(str(type(clf_package)))
+            )
+            self.invalid_input = True
+        else:
+            if len(clf_package) != 3:
+                self.error_queue.add_message(
+                    ue.InvalidClassifierPackageSize(str(len(clf_package)))
+                )
+
+                self.invalid_input = True
+
+        # Idk if there is an abstract model class but should be ok not to
+        # check this
+        # if type(clf_object) != abstract_model_class
+
+        if type(hyperparams) != dict:
+            self.error_queue.add_message(
+                ue.InvalidHyperparamSetType(str(type(hyperparams)))
+            )
+
+            self.invalid_input = True
+
+        if type(metrics) != list:
+            self.error_queue.add_message(
+                ue.InvalidMetricSetType(str(type(metrics)))
+            )
+            self.invalid_input = True
+
     def check_valid_package(self):
         for clf_package in self.clf_packages:
+
+            self.check_valid_types(clf_package)
+
+            if self.invalid_input:
+                continue
+
             clf_object = clf_package[0]
             clf_name = clf_object.__name__
             hyperparams = clf_package[1]
             metrics = clf_package[2]
-
-            # Add Check Valid Types Here
 
             self.check_supported_model(clf_name)
             if self.model_supported():

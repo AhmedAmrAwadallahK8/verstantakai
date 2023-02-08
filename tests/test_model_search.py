@@ -21,6 +21,7 @@ class TestModelSearch():
         return None
 
     def execute_tests(self):
+        self.invalid_input_test()
         self.single_model_test()
         self.repeated_model_test()
         self.multiple_model_test()
@@ -36,6 +37,16 @@ class TestModelSearch():
         self.classification_plot_test()
         self.real_data_test()
         print("All Tests Executed Successfully")
+
+    def invalid_input_test(self):
+        x = np.array([[1, 2]])
+        y = np.ones(x.shape[0])
+        metrics = ()
+        hyperparams = []
+        clf_pack = [[RandomForestClassifier, hyperparams, metrics],
+                    (RandomForestClassifier, {}, [], 0)]
+        srch = ModelSearch(x, y, clf_pack)
+        assert srch.is_reset
 
     def single_model_test(self):
         x = np.array(

@@ -51,3 +51,34 @@ class InvalidOptimizingMetricError(UserError):
         self.message += "invalid optimizing metric is present in a "
         self.message += clf_name + " package."
         super().__init__(self.message)
+
+
+class InvalidClassifierPackageType(UserError):
+    def __init__(self, observed_type):
+        self.message = "Classifier packages are expected to be of type tuple,"
+        self.message += " instead type " + observed_type + " was found"
+        super().__init__(self.message)
+
+
+class InvalidClassifierPackageSize(UserError):
+    def __init__(self, observed_size):
+        self.message = "Classifier packages are expected to have 3 elements,"
+        self.message += " instead a tupe of size " + observed_size + " was"
+        self.message += " found"
+        super().__init__(self.message)
+
+
+class InvalidHyperparamSetType(UserError):
+    def __init__(self, observed_type):
+        self.message = "Hyperparm sets are expected to be of type "
+        self.message += "dictionary instead type " + observed_type + " was"
+        self.message += " found"
+        super().__init__(self.message)
+
+
+class InvalidMetricSetType(UserError):
+    def __init__(self, observed_type):
+        self.message = "Metric sets are expected to be of type "
+        self.message += "list instead type " + observed_type + " was"
+        self.message += " found"
+        super().__init__(self.message)

@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import f1_score
 from sklearn.metrics import precision_score
@@ -15,7 +14,6 @@ from sklearn.linear_model import LogisticRegression
 from src.verstantakai import ModelSearch
 from tests.bad_classifier import BadClassifier
 from sklearn.datasets import load_breast_cancer
-import sys
 
 
 class TestModelSearch():
@@ -79,7 +77,8 @@ class TestModelSearch():
         )
         n_folds = 5
         metrics = [accuracy_score]
-        clsf_param = [(RandomForestClassifier, {}, metrics), (RandomForestClassifier, {}, metrics)]
+        clsf_param = [(RandomForestClassifier, {}, metrics),
+                      (RandomForestClassifier, {}, metrics)]
         srch = ModelSearch(x, y, clsf_param, n_folds)
         srch.run()
         results = srch.get_raw_results()
@@ -217,7 +216,11 @@ class TestModelSearch():
         )
         n_folds = 5
         hyperparams = {"n_estimators": [10, 1], "max_depth": [4, 3, 2, 1]}
-        metrics = [classification_report, f1_score, precision_score, recall_score]
+        metrics = [classification_report,
+                   f1_score,
+                   precision_score,
+                   recall_score,
+                   roc_auc_score]
         clsf_param = [(RandomForestClassifier, hyperparams, metrics)]
         srch = ModelSearch(x, y, clsf_param, n_folds)
         assert srch.is_reset
@@ -231,10 +234,8 @@ class TestModelSearch():
         clsf_param = [(LinearRegression, hyperparams, metrics)]
         srch = ModelSearch(x, y, clsf_param, n_folds, generate_plots=True)
         srch.run()
-
-        # Change this to catch the exception of the plot not existing in the dict
         try:
-            fig = srch.plots["LinearRegression#1"][0]["calibration_plot"]
+            srch.plots["LinearRegression#1"][0]["calibration_plot"]
             assert True
         except KeyError:
             assert False
@@ -250,7 +251,7 @@ class TestModelSearch():
         srch = ModelSearch(x, y, clsf_param, n_folds, generate_plots=True)
         srch.run()
         try:
-            fig = srch.plots["LogisticRegression#1"][0]["roc_curve"]
+            srch.plots["LogisticRegression#1"][0]["roc_curve"]
             assert True
         except KeyError:
             assert False
@@ -260,9 +261,9 @@ class TestModelSearch():
         x = data.data
         y = data.target
         n_folds = 5
-        hyperparams_forest = {"n_estimators": [10, 100, 1], "max_depth": [4, 3, 2, 1]}
+        hyperparams_forest = {"n_estimators": [10, 100, 1],
+                              "max_depth": [4, 3, 2, 1]}
         hyperparams_log = {"C": list(np.logspace(-3, 3, 5))}
-        
         metrics = [accuracy_score, f1_score, precision_score, recall_score]
         clsf_param = [(RandomForestClassifier, hyperparams_forest, metrics),
                       (LogisticRegression, hyperparams_log, metrics)]
@@ -271,8 +272,3 @@ class TestModelSearch():
         fig = srch.plots["LogisticRegression#1"][0]["roc_curve"]
         fig.show()
         assert srch.search_complete
-
-
-
-    def plot_functionality_test(self):
-        assert False

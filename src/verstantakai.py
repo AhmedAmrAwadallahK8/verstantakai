@@ -2,11 +2,13 @@ from sklearn.model_selection import KFold
 import numpy as np
 # import custom_exceptions as ce
 import src.user_errors as ue
+import src.user_warnings as uw
 from itertools import product
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from sklearn.metrics import roc_curve
 import random
+from src.user_message_queue import UserMessageQueue
 
 
 class ModelSearch():
@@ -76,6 +78,8 @@ class ModelSearch():
         n_folds=1,
         generate_plots=False
     ):
+        self.error_queue = UserMessageQueue()
+
         self.generate_plots = generate_plots
         self.is_reset = False
         self.invalid_input = False
@@ -98,6 +102,7 @@ class ModelSearch():
 
         if self.invalid_input:
             self.reset_state()
+            self.error_queue.process_queue()
 
     def reset_state(self):
         self.is_reset = True
@@ -111,7 +116,8 @@ class ModelSearch():
         self.optimal_results = None
         self.results = None
         self.data_state = None
-        print("Object state has been reset.\n")
+
+        self.error_queue.add_message(uw.ObjectResetWarning())
 
     def model_supported(self):
         if self.invalid_input:
@@ -137,7 +143,7 @@ class ModelSearch():
         if clf_name in self.supported_models:
             return
         else:
-            ue.UnsupportedModelError(clf_name)
+            self.error_queue.add_message(ue.UnsupportedModelError(clf_name))
             self.invalid_input = True
 
     def mixed_hyperparam_structure(self, single_model, search_model):
@@ -153,7 +159,9 @@ class ModelSearch():
         for hyper_key in hyperparams:
             # Check Keys
             if hyper_key not in valid_hyperparams:
-                ue.UnsupportedHyperparamError(hyper_key, clf_name)
+                self.error_queue.add_message(
+                    ue.UnsupportedHyperparamError(hyper_key, clf_name)
+                )
                 self.invalid_input = True
 
             # Check Values
@@ -161,7 +169,9 @@ class ModelSearch():
             if type(hyper_val) is list:
                 single_model_structure = False
                 if len(hyper_val) == 0:
-                    ue.EmptyHyperparamListError(hyper_key, clf_name)
+                    self.error_queue.add_message(
+                        ue.EmptyHyperparamListError(hyper_key, clf_name)
+                    )
                     self.invalid_input = True
             else:
                 search_model_structure = False
@@ -170,7 +180,9 @@ class ModelSearch():
             single_model_structure,
             search_model_structure
         ):
-            ue.HyperparamListNonListMismatchError(clf_name)
+            self.error_queue.add_message(
+                ue.HyperparamListNonListMismatchError(clf_name)
+            )
             self.invalid_input = True
 
     def check_valid_metrics(self, clf_name: str, metrics):
@@ -181,10 +193,14 @@ class ModelSearch():
             if first_metric:
                 first_metric = False
                 if metric_name in self.invalid_optimizing_metrics:
-                    ue.InvalidOptimizingMetricError(metric_name, clf_name)
+                    self.error_queue.add_message(
+                        ue.InvalidOptimizingMetricError(metric_name, clf_name)
+                    )
                     self.invalid_input = True
             if metric_name not in valid_metrics:
-                ue.UnsupportedMetricError(metric_name, clf_name)
+                self.error_queue.add_message(
+                    ue.UnsupportedMetricError(metric_name, clf_name)
+                )
                 self.invalid_input = True
 
     def get_raw_results(self):
@@ -206,7 +222,10 @@ class ModelSearch():
                 print(model_id)
                 self.print_model_results(self.results[model_id])
         else:
-            print("This object has not been run. Run the object and then try to print results")
+            self.error_queue.add_message(
+                uw.ObjectNotRunWarning()
+            )
+            self.error_queue.process_queue()
 
     def record_results(
         self,
@@ -223,9 +242,6 @@ class ModelSearch():
         self.results[clf_name] = ret
         self.data_state[clf_name] = ret_data
         self.plots[clf_name] = ret_plots
-
-    def run_metrics(self):
-        return 0
 
     def has_hyperparam_permutations(self, clf_hyperparams):
         for k in clf_hyperparams.keys():
@@ -487,6 +503,9 @@ class ModelSearch():
 
     def run(self):
         if self.is_reset:
-            print("This object has not been setup properly. Aborting attempted run.")
+            self.error_queue.add_message(
+                uw.UninitializedObjectWarning()
+            )
+            self.error_queue.process_queue()
         else:
             self.run_models()

@@ -1,8 +1,11 @@
-class UserError():
+from src.user_message import UserMessage
+
+
+class UserError(UserMessage):
     def __init__(self, message="No logged message"):
         self.message = "Invalid input. Use the following message to debug.\n"
         self.message += message + "\n"
-        print(self.message)
+        super().__init__(self.message)
 
 
 class UnsupportedModelError(UserError):
